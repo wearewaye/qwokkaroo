@@ -322,7 +322,7 @@ const DriverDashboard = () => {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Distance Traveled:</span>
-                <span className="font-medium">47.2 km</span>
+                <span className="font-medium">23.1 km</span>
               </div>
             </div>
           </div>
