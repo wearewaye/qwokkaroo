@@ -26,37 +26,37 @@ const DriverDashboard = () => {
   
   const driverId = 'driver_001'; // Mock driver ID
 
-  // Mock data for demo
+  // Mock data for demo - London Chinatown area
   const mockDeliveries = [
     {
       id: '1',
       customer_name: 'Sarah Johnson',
-      customer_phone: '+1 (555) 123-4567',
-      address: '123 Market St, San Francisco, CA',
-      latitude: 37.7849,
-      longitude: -122.4094,
+      customer_phone: '+44 20 7946 0958',
+      address: '15 Gerrard Street, Chinatown, London W1D 6JD',
+      latitude: 51.5108,
+      longitude: -0.1320,
       status: 'in_progress',
-      order_details: '2x Margherita Pizza, 1x Caesar Salad, 1x Coke'
+      order_details: '2x Sweet & Sour Pork, 1x Fried Rice, 1x Prawn Crackers'
     },
     {
       id: '2',
       customer_name: 'Mike Chen',
-      customer_phone: '+1 (555) 987-6543',
-      address: '456 Mission St, San Francisco, CA',
-      latitude: 37.7649,
-      longitude: -122.4194,
+      customer_phone: '+44 20 7946 0123',
+      address: '8 Little Newport Street, Chinatown, London WC2H 7JJ',
+      latitude: 51.5128,
+      longitude: -0.1280,
       status: 'pending',
-      order_details: '3x Chicken Burrito, 2x Guacamole, 1x Sprite'
+      order_details: '3x Dim Sum Selection, 2x Jasmine Tea, 1x Fortune Cookies'
     },
     {
       id: '3',
       customer_name: 'Emily Davis',
-      customer_phone: '+1 (555) 456-7890',
-      address: '789 Valencia St, San Francisco, CA',
-      latitude: 37.7549,
-      longitude: -122.4294,
+      customer_phone: '+44 20 7946 0789',
+      address: '25 Lisle Street, Chinatown, London WC2H 7BA',
+      latitude: 51.5098,
+      longitude: -0.1310,
       status: 'pending',
-      order_details: '1x Pad Thai, 1x Spring Rolls, 1x Thai Iced Tea'
+      order_details: '1x Peking Duck, 1x Pancakes, 1x Hoisin Sauce'
     }
   ];
 
