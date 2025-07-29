@@ -1,15 +1,17 @@
 .App {
   text-align: left;
+  width: 100%;
   max-width: 480px;
   margin: 0 auto;
   min-height: 100vh;
   background: #f8fafc;
 }
 
-/* Mobile-first responsive design */
+/* Full width on mobile devices */
 @media (max-width: 480px) {
   .App {
     max-width: 100%;
+    margin: 0;
   }
 }
 
