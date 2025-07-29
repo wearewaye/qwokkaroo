@@ -17,6 +17,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 const DriverDashboard = () => {
+  const [currentView, setCurrentView] = useState('dashboard'); // 'dashboard', 'chat', 'deliveries'
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [activeCustomer, setActiveCustomer] = useState('Sarah Johnson');
@@ -123,7 +124,7 @@ const DriverDashboard = () => {
   const getStatusColor = (status) => {
     switch (status) {
       case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'in_progress': return 'bg-blue-100 text-blue-800';
+      case 'in_progress': return 'bg-purple-100 text-purple-800';
       case 'delivered': return 'bg-green-100 text-green-800';
       default: return 'bg-gray-100 text-gray-800';
     }
@@ -138,198 +139,356 @@ const DriverDashboard = () => {
     }
   };
 
-  return (
+  const getUnreadCount = (customerName) => {
+    const customerMessages = getCustomerMessages(customerName);
+    return customerMessages.filter(msg => msg.sender === 'customer').length;
+  };
+
+  // Mobile Dashboard View
+  const DashboardView = () => (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+      {/* Mobile Header */}
+      <div className="bg-purple-600 text-white p-4 shadow-lg">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
+              <span className="text-purple-600 font-bold text-xl">🚗</span>
+            </div>
+            <div>
+              <h1 className="text-lg font-bold">John Smith</h1>
               <div className="flex items-center space-x-2">
-                <div className="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">🚗</span>
-                </div>
-                <div>
-                  <h1 className="text-xl font-bold text-gray-900">Driver Dashboard</h1>
-                  <p className="text-sm text-gray-600">John Smith • Online</p>
-                </div>
+                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                <span className="text-sm opacity-90">Online</span>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2 bg-green-100 px-3 py-1 rounded-full">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span className="text-sm font-medium text-green-800">Online</span>
+          </div>
+          <div className="text-right">
+            <p className="text-sm opacity-90">Today</p>
+            <p className="text-xl font-bold">£89.50</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Stats */}
+      <div className="bg-white mx-4 -mt-6 rounded-xl shadow-lg p-4 mb-4 relative z-10">
+        <div className="grid grid-cols-3 gap-4 text-center">
+          <div>
+            <p className="text-2xl font-bold text-purple-600">{deliveries.filter(d => d.status !== 'delivered').length}</p>
+            <p className="text-xs text-gray-600">Active</p>
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-green-600">8</p>
+            <p className="text-xs text-gray-600">Completed</p>
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-blue-600">23.1</p>
+            <p className="text-xs text-gray-600">km Today</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Map */}
+      <div className="mx-4 mb-4">
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+          <div className="h-80">
+            <MapContainer 
+              center={[driverLocation.lat, driverLocation.lng]} 
+              zoom={14} 
+              className="h-full w-full rounded-xl"
+            >
+              <TileLayer
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              />
+              
+              {/* Driver Location */}
+              <Marker position={[driverLocation.lat, driverLocation.lng]}>
+                <Popup>
+                  <div className="text-center">
+                    <strong>🚗 Your Location</strong>
+                    <br />
+                    Driver: John Smith
+                  </div>
+                </Popup>
+              </Marker>
+
+              {/* Delivery Locations */}
+              {deliveries.map((delivery) => (
+                <Marker 
+                  key={delivery.id} 
+                  position={[delivery.latitude, delivery.longitude]}
+                >
+                  <Popup>
+                    <div className="min-w-48">
+                      <div className="flex items-center justify-between mb-2">
+                        <strong>{delivery.customer_name}</strong>
+                        <span className={`px-2 py-1 rounded text-xs ${getStatusColor(delivery.status)}`}>
+                          {delivery.status}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600 mb-1">{delivery.address}</p>
+                      <p className="text-sm text-gray-600 mb-2">{delivery.customer_phone}</p>
+                      <div className="border-t pt-2">
+                        <p className="text-xs font-medium text-gray-700">Order:</p>
+                        <p className="text-xs text-gray-600">{delivery.order_details}</p>
+                      </div>
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
+            </MapContainer>
+          </div>
+        </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="mx-4 space-y-3">
+        <button
+          onClick={() => setCurrentView('deliveries')}
+          className="w-full bg-white rounded-xl shadow-lg p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+        >
+          <div className="flex items-center space-x-3">
+            <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+              <span className="text-2xl">📦</span>
+            </div>
+            <div className="text-left">
+              <h3 className="font-semibold text-gray-900">Active Deliveries</h3>
+              <p className="text-sm text-gray-600">{deliveries.filter(d => d.status !== 'delivered').length} pending orders</p>
+            </div>
+          </div>
+          <div className="text-gray-400">→</div>
+        </button>
+
+        <button
+          onClick={() => setCurrentView('chat')}
+          className="w-full bg-white rounded-xl shadow-lg p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+        >
+          <div className="flex items-center space-x-3">
+            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center relative">
+              <span className="text-2xl">💬</span>
+              {getUnreadCount(activeCustomer) > 0 && (
+                <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
+                  <span className="text-xs text-white font-bold">{getUnreadCount(activeCustomer)}</span>
+                </div>
+              )}
+            </div>
+            <div className="text-left">
+              <h3 className="font-semibold text-gray-900">Messages</h3>
+              <p className="text-sm text-gray-600">Chat with customers</p>
+            </div>
+          </div>
+          <div className="text-gray-400">→</div>
+        </button>
+      </div>
+
+      {/* Quick Customer List */}
+      <div className="mx-4 mt-4 bg-white rounded-xl shadow-lg p-4">
+        <h3 className="font-semibold text-gray-900 mb-3">Recent Customers</h3>
+        <div className="space-y-2">
+          {deliveries.slice(0, 2).map((delivery) => (
+            <div 
+              key={delivery.id}
+              className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer"
+              onClick={() => {
+                setActiveCustomer(delivery.customer_name);
+                setCurrentView('chat');
+              }}
+            >
+              <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                <span className="text-purple-600 font-bold">{delivery.customer_name[0]}</span>
               </div>
-              <div className="text-right">
-                <p className="text-sm font-medium text-gray-900">Today's Earnings</p>
-                <p className="text-lg font-bold text-green-600">£89.50</p>
+              <div className="flex-1">
+                <p className="font-medium text-gray-900">{delivery.customer_name}</p>
+                <p className="text-sm text-gray-600">{delivery.address.split(',')[0]}</p>
               </div>
+              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(delivery.status)}`}>
+                {getStatusIcon(delivery.status)}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="h-20"></div> {/* Bottom spacing */}
+    </div>
+  );
+
+  // Mobile Chat View
+  const ChatView = () => (
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      {/* Chat Header */}
+      <div className="bg-purple-600 text-white p-4 shadow-lg">
+        <div className="flex items-center space-x-3">
+          <button 
+            onClick={() => setCurrentView('dashboard')}
+            className="text-white hover:bg-purple-700 p-2 rounded-lg"
+          >
+            ←
+          </button>
+          <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
+            <span className="text-purple-600 font-bold">{activeCustomer[0]}</span>
+          </div>
+          <div>
+            <h2 className="font-semibold">{activeCustomer}</h2>
+            <div className="flex items-center space-x-2">
+              <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+              <span className="text-sm opacity-90">Online</span>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="flex h-[calc(100vh-80px)]">
-        {/* Left Panel - Deliveries & Chat */}
-        <div className="w-1/3 bg-white border-r flex flex-col">
-          {/* Active Deliveries */}
-          <div className="border-b p-4">
-            <h2 className="text-lg font-semibold text-gray-900 mb-3">Active Deliveries</h2>
-            <div className="space-y-3 max-h-48 overflow-y-auto">
-              {deliveries.map((delivery) => (
-                <div 
-                  key={delivery.id}
-                  className={`p-3 rounded-lg border cursor-pointer transition-all hover:shadow-md ${
-                    activeCustomer === delivery.customer_name 
-                      ? 'border-purple-300 bg-purple-50' 
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                  onClick={() => setActiveCustomer(delivery.customer_name)}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-medium text-gray-900">{delivery.customer_name}</h3>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(delivery.status)}`}>
-                      {getStatusIcon(delivery.status)} {delivery.status.replace('_', ' ')}
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-600 mb-1">{delivery.address}</p>
-                  <p className="text-xs text-gray-500">{delivery.order_details}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Chat Section */}
-          <div className="flex-1 flex flex-col">
-            <div className="p-4 border-b">
-              <h3 className="font-semibold text-gray-900">Chat with {activeCustomer}</h3>
-              <div className="flex items-center mt-1">
-                <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                <span className="text-sm text-gray-600">Online</span>
+      {/* Customer Info Card */}
+      <div className="bg-white mx-4 mt-4 rounded-xl shadow-lg p-4">
+        {deliveries
+          .filter(d => d.customer_name === activeCustomer)
+          .map(delivery => (
+            <div key={delivery.id}>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-semibold text-gray-900">Current Order</h3>
+                <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(delivery.status)}`}>
+                  {getStatusIcon(delivery.status)} {delivery.status.replace('_', ' ')}
+                </span>
+              </div>
+              <p className="text-sm text-gray-600 mb-2">{delivery.address}</p>
+              <p className="text-sm text-gray-600 mb-2">{delivery.customer_phone}</p>
+              <div className="border-t pt-2 mt-2">
+                <p className="text-xs font-medium text-gray-700">Order Details:</p>
+                <p className="text-sm text-gray-900">{delivery.order_details}</p>
               </div>
             </div>
+          ))}
+      </div>
 
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              {getCustomerMessages(activeCustomer).map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex ${message.sender === 'driver' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div
-                    className={`max-w-xs px-4 py-2 rounded-2xl ${
-                      message.sender === 'driver'
-                        ? 'bg-purple-500 text-white'
-                        : 'bg-gray-200 text-gray-900'
-                    }`}
-                  >
-                    <p className="text-sm">{message.text}</p>
-                    <p className={`text-xs mt-1 ${
-                      message.sender === 'driver' ? 'text-purple-200' : 'text-gray-500'
-                    }`}>
-                      {new Date(message.timestamp).toLocaleTimeString([], { 
-                        hour: '2-digit', 
-                        minute: '2-digit' 
-                      })}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Message Input */}
-            <div className="p-4 border-t">
-              <div className="flex space-x-2">
-                <input
-                  type="text"
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-                  placeholder="Type a message..."
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                />
-                <button
-                  onClick={sendMessage}
-                  className="px-6 py-2 bg-purple-500 text-white rounded-full hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-colors"
-                >
-                  Send
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Panel - Map */}
-        <div className="flex-1 relative">
-          <MapContainer 
-            center={[driverLocation.lat, driverLocation.lng]} 
-            zoom={13} 
-            className="h-full w-full"
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+        {getCustomerMessages(activeCustomer).map((message) => (
+          <div
+            key={message.id}
+            className={`flex ${message.sender === 'driver' ? 'justify-end' : 'justify-start'}`}
           >
-            <TileLayer
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            />
-            
-            {/* Driver Location */}
-            <Marker position={[driverLocation.lat, driverLocation.lng]}>
-              <Popup>
-                <div className="text-center">
-                  <strong>🚗 Your Location</strong>
-                  <br />
-                  Driver: John Smith
-                </div>
-              </Popup>
-            </Marker>
-
-            {/* Delivery Locations */}
-            {deliveries.map((delivery) => (
-              <Marker 
-                key={delivery.id} 
-                position={[delivery.latitude, delivery.longitude]}
-              >
-                <Popup>
-                  <div className="min-w-48">
-                    <div className="flex items-center justify-between mb-2">
-                      <strong>{delivery.customer_name}</strong>
-                      <span className={`px-2 py-1 rounded text-xs ${getStatusColor(delivery.status)}`}>
-                        {delivery.status}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-1">{delivery.address}</p>
-                    <p className="text-sm text-gray-600 mb-2">{delivery.customer_phone}</p>
-                    <div className="border-t pt-2">
-                      <p className="text-xs font-medium text-gray-700">Order:</p>
-                      <p className="text-xs text-gray-600">{delivery.order_details}</p>
-                    </div>
-                  </div>
-                </Popup>
-              </Marker>
-            ))}
-          </MapContainer>
-
-          {/* Map Overlay - Quick Stats */}
-          <div className="absolute top-4 right-4 bg-white rounded-lg shadow-lg p-4 z-1000">
-            <h4 className="font-semibold text-gray-900 mb-2">Quick Stats</h4>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Active Deliveries:</span>
-                <span className="font-medium">{deliveries.filter(d => d.status !== 'delivered').length}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Completed Today:</span>
-                <span className="font-medium">8</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Distance Traveled:</span>
-                <span className="font-medium">23.1 km</span>
-              </div>
+            <div
+              className={`max-w-xs px-4 py-3 rounded-2xl ${
+                message.sender === 'driver'
+                  ? 'bg-purple-500 text-white'
+                  : 'bg-white text-gray-900 shadow-lg'
+              }`}
+            >
+              <p className="text-sm">{message.text}</p>
+              <p className={`text-xs mt-2 ${
+                message.sender === 'driver' ? 'text-purple-200' : 'text-gray-500'
+              }`}>
+                {new Date(message.timestamp).toLocaleTimeString([], { 
+                  hour: '2-digit', 
+                  minute: '2-digit' 
+                })}
+              </p>
             </div>
           </div>
+        ))}
+      </div>
+
+      {/* Message Input */}
+      <div className="bg-white border-t p-4">
+        <div className="flex space-x-3 items-end">
+          <input
+            type="text"
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+            placeholder="Type a message..."
+            className="flex-1 px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-base"
+          />
+          <button
+            onClick={sendMessage}
+            className="px-6 py-3 bg-purple-500 text-white rounded-2xl hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-colors font-medium"
+          >
+            Send
+          </button>
         </div>
       </div>
     </div>
   );
+
+  // Mobile Deliveries View
+  const DeliveriesView = () => (
+    <div className="min-h-screen bg-gray-50">
+      {/* Deliveries Header */}
+      <div className="bg-purple-600 text-white p-4 shadow-lg">
+        <div className="flex items-center space-x-3">
+          <button 
+            onClick={() => setCurrentView('dashboard')}
+            className="text-white hover:bg-purple-700 p-2 rounded-lg"
+          >
+            ←
+          </button>
+          <div>
+            <h2 className="text-lg font-bold">Active Deliveries</h2>
+            <p className="text-sm opacity-90">{deliveries.filter(d => d.status !== 'delivered').length} orders pending</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Deliveries List */}
+      <div className="p-4 space-y-4">
+        {deliveries.map((delivery) => (
+          <div key={delivery.id} className="bg-white rounded-xl shadow-lg p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                  <span className="text-purple-600 font-bold">{delivery.customer_name[0]}</span>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">{delivery.customer_name}</h3>
+                  <p className="text-sm text-gray-600">{delivery.customer_phone}</p>
+                </div>
+              </div>
+              <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(delivery.status)}`}>
+                {getStatusIcon(delivery.status)} {delivery.status.replace('_', ' ')}
+              </span>
+            </div>
+            
+            <div className="space-y-2">
+              <p className="text-sm text-gray-600">📍 {delivery.address}</p>
+              <div className="border-t pt-2">
+                <p className="text-xs font-medium text-gray-700 mb-1">Order:</p>
+                <p className="text-sm text-gray-900">{delivery.order_details}</p>
+              </div>
+            </div>
+
+            <div className="flex space-x-2 mt-4">
+              <button
+                onClick={() => {
+                  setActiveCustomer(delivery.customer_name);
+                  setCurrentView('chat');
+                }}
+                className="flex-1 bg-purple-500 text-white py-2 px-4 rounded-lg font-medium hover:bg-purple-600 transition-colors"
+              >
+                💬 Message
+              </button>
+              <button className="flex-1 bg-green-500 text-white py-2 px-4 rounded-lg font-medium hover:bg-green-600 transition-colors">
+                🗺️ Navigate
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  // Render current view
+  const renderCurrentView = () => {
+    switch (currentView) {
+      case 'chat':
+        return <ChatView />;
+      case 'deliveries':
+        return <DeliveriesView />;
+      default:
+        return <DashboardView />;
+    }
+  };
+
+  return renderCurrentView();
 };
 
 function App() {
