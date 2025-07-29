@@ -250,7 +250,7 @@ const DriverDashboard = () => {
                 />
                 <button
                   onClick={sendMessage}
-                  className="px-6 py-2 bg-orange-500 text-white rounded-full hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-colors"
+                  className="px-6 py-2 bg-purple-500 text-white rounded-full hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-colors"
                 >
                   Send
                 </button>
