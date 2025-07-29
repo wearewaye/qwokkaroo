@@ -181,7 +181,7 @@ const DriverDashboard = () => {
                   key={delivery.id}
                   className={`p-3 rounded-lg border cursor-pointer transition-all hover:shadow-md ${
                     activeCustomer === delivery.customer_name 
-                      ? 'border-orange-300 bg-orange-50' 
+                      ? 'border-purple-300 bg-purple-50' 
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                   onClick={() => setActiveCustomer(delivery.customer_name)}
