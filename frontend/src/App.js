@@ -22,7 +22,7 @@ const DriverDashboard = () => {
   const [activeCustomer, setActiveCustomer] = useState('Sarah Johnson');
   const [customers, setCustomers] = useState([]);
   const [deliveries, setDeliveries] = useState([]);
-  const [driverLocation] = useState({ lat: 37.7749, lng: -122.4194 }); // San Francisco
+  const [driverLocation] = useState({ lat: 51.5118, lng: -0.1300 }); // London Chinatown
   
   const driverId = 'driver_001'; // Mock driver ID
 
