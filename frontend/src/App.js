@@ -64,14 +64,14 @@ const DriverDashboard = () => {
     {
       id: '1',
       customer_name: 'Sarah Johnson',
-      text: 'Hi! Just checking on my pizza order. How far away are you?',
+      text: 'Hi! Just checking on my Chinese order. How far away are you?',
       sender: 'customer',
       timestamp: new Date(Date.now() - 5 * 60000)
     },
     {
       id: '2',
       customer_name: 'Sarah Johnson',
-      text: 'Hi Sarah! I\'m about 5 minutes away. Your order is ready and hot!',
+      text: 'Hi Sarah! I\'m about 5 minutes away from your Gerrard Street address. Your food is hot and ready!',
       sender: 'driver',
       timestamp: new Date(Date.now() - 3 * 60000)
     },
