@@ -162,7 +162,7 @@ const DriverDashboard = () => {
               </div>
               <div className="text-right">
                 <p className="text-sm font-medium text-gray-900">Today's Earnings</p>
-                <p className="text-lg font-bold text-green-600">$127.50</p>
+                <p className="text-lg font-bold text-green-600">£89.50</p>
               </div>
             </div>
           </div>
